@@ -28,8 +28,7 @@ def create_temp_table(cur):
                 automatic_extinguishing_system_type VARCHAR(255),
                 automatic_extinguishing_system_performance VARCHAR(255),
                 automatic_extinguishing_system_failure_reason VARCHAR(255),
-                number_of_sprinkler_heads_operating INTEGER,
-                incident_date DATE
+                number_of_sprinkler_heads_operating INTEGER
             ) ON COMMIT DROP
         """)
         log_info(logger, "Successfully created temporary table")
@@ -55,8 +54,7 @@ def upsert_from_temp(cur):
                 automatic_extinguishing_system_type,
                 automatic_extinguishing_system_performance,
                 automatic_extinguishing_system_failure_reason,
-                number_of_sprinkler_heads_operating,
-                incident_date
+                number_of_sprinkler_heads_operating
             )
             SELECT 
                 incident_number,
@@ -70,8 +68,7 @@ def upsert_from_temp(cur):
                 automatic_extinguishing_system_type,
                 automatic_extinguishing_system_performance,
                 automatic_extinguishing_system_failure_reason,
-                number_of_sprinkler_heads_operating,
-                incident_date
+                number_of_sprinkler_heads_operating
             FROM fire_dw.temp_detection
             ON CONFLICT (incident_number) 
             DO UPDATE SET
@@ -85,8 +82,7 @@ def upsert_from_temp(cur):
                 automatic_extinguishing_system_type = EXCLUDED.automatic_extinguishing_system_type,
                 automatic_extinguishing_system_performance = EXCLUDED.automatic_extinguishing_system_performance,
                 automatic_extinguishing_system_failure_reason = EXCLUDED.automatic_extinguishing_system_failure_reason,
-                number_of_sprinkler_heads_operating = EXCLUDED.number_of_sprinkler_heads_operating,
-                incident_date = EXCLUDED.incident_date
+                number_of_sprinkler_heads_operating = EXCLUDED.number_of_sprinkler_heads_operating
         """)
         log_info(logger, "Successfully upserted data from temporary table")
     except Exception as e:
@@ -155,8 +151,7 @@ def main(load_date):
                             automatic_extinguishing_system_type,
                             automatic_extinguishing_system_performance,
                             automatic_extinguishing_system_failure_reason,
-                            number_of_sprinkler_heads_operating,
-                            incident_date
+                            number_of_sprinkler_heads_operating
                         ) VALUES %s
                     """, data)
                     

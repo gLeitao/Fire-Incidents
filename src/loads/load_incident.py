@@ -26,18 +26,17 @@ def create_temp_table(cur):
             structure_status VARCHAR(255),
             floor_of_fire_origin VARCHAR(255),
             fire_spread VARCHAR(255),
-            no_flame_spread BOOLEAN,
-            incident_date DATE
+            no_flame_spread BOOLEAN
         ) ON COMMIT DROP
     """)
 
 def upsert_from_temp(cur):
     cur.execute("""
         INSERT INTO fire_dw.dim_incident (
-            incident_number, primary_situation, property_use, area_of_fire_origin, ignition_cause, ignition_factor_primary, ignition_factor_secondary, heat_source, item_first_ignited, human_factors_associated_with_ignition, structure_type, structure_status, floor_of_fire_origin, fire_spread, no_flame_spread, incident_date
+            incident_number, primary_situation, property_use, area_of_fire_origin, ignition_cause, ignition_factor_primary, ignition_factor_secondary, heat_source, item_first_ignited, human_factors_associated_with_ignition, structure_type, structure_status, floor_of_fire_origin, fire_spread, no_flame_spread
         )
         SELECT 
-            incident_number, primary_situation, property_use, area_of_fire_origin, ignition_cause, ignition_factor_primary, ignition_factor_secondary, heat_source, item_first_ignited, human_factors_associated_with_ignition, structure_type, structure_status, floor_of_fire_origin, fire_spread, no_flame_spread, incident_date
+            incident_number, primary_situation, property_use, area_of_fire_origin, ignition_cause, ignition_factor_primary, ignition_factor_secondary, heat_source, item_first_ignited, human_factors_associated_with_ignition, structure_type, structure_status, floor_of_fire_origin, fire_spread, no_flame_spread
         FROM fire_dw.temp_incident
         ON CONFLICT (incident_number) DO UPDATE SET
             primary_situation = EXCLUDED.primary_situation,
@@ -53,8 +52,7 @@ def upsert_from_temp(cur):
             structure_status = EXCLUDED.structure_status,
             floor_of_fire_origin = EXCLUDED.floor_of_fire_origin,
             fire_spread = EXCLUDED.fire_spread,
-            no_flame_spread = EXCLUDED.no_flame_spread,
-            incident_date = EXCLUDED.incident_date
+            no_flame_spread = EXCLUDED.no_flame_spread
     """)
 
 def main(load_date):
@@ -92,7 +90,7 @@ def main(load_date):
                 data = [tuple(x) for x in batch.values]
                 execute_values(cur, """
                     INSERT INTO fire_dw.temp_incident (
-                        incident_number, primary_situation, property_use, area_of_fire_origin, ignition_cause, ignition_factor_primary, ignition_factor_secondary, heat_source, item_first_ignited, human_factors_associated_with_ignition, structure_type, structure_status, floor_of_fire_origin, fire_spread, no_flame_spread, incident_date
+                        incident_number, primary_situation, property_use, area_of_fire_origin, ignition_cause, ignition_factor_primary, ignition_factor_secondary, heat_source, item_first_ignited, human_factors_associated_with_ignition, structure_type, structure_status, floor_of_fire_origin, fire_spread, no_flame_spread
                     ) VALUES %s
                 """, data)
             upsert_from_temp(cur)

@@ -23,8 +23,7 @@ def create_temp_table(cur):
                 zipcode VARCHAR(255),
                 supervisor_district VARCHAR(255),
                 neighborhood_district VARCHAR(255),
-                point VARCHAR(255),
-                incident_date DATE
+                point VARCHAR(255)
             ) ON COMMIT DROP
         """)
         log_info(logger, "Successfully created temporary table")
@@ -45,8 +44,7 @@ def upsert_from_temp(cur):
                 zipcode,
                 supervisor_district,
                 neighborhood_district,
-                point,
-                incident_date
+                point
             )
             SELECT 
                 incident_number,
@@ -55,8 +53,7 @@ def upsert_from_temp(cur):
                 zipcode,
                 supervisor_district,
                 neighborhood_district,
-                point,
-                incident_date
+                point
             FROM temp_location
             ON CONFLICT (incident_number) 
             DO UPDATE SET
@@ -65,8 +62,7 @@ def upsert_from_temp(cur):
                 zipcode = EXCLUDED.zipcode,
                 supervisor_district = EXCLUDED.supervisor_district,
                 neighborhood_district = EXCLUDED.neighborhood_district,
-                point = EXCLUDED.point,
-                incident_date = EXCLUDED.incident_date
+                point = EXCLUDED.point
         """)
         log_info(logger, "Successfully upserted data from temporary table")
     except Exception as e:
@@ -130,8 +126,7 @@ def main(load_date):
                             zipcode,
                             supervisor_district,
                             neighborhood_district,
-                            point,
-                            incident_date
+                            point
                         ) VALUES %s
                     """, data)
                     
