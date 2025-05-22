@@ -33,12 +33,12 @@ def create_temp_table(cur):
 
 def upsert_from_temp(cur):
     cur.execute("""
-        INSERT INTO dim_incident (
+        INSERT INTO fire_dw.dim_incident (
             incident_number, primary_situation, property_use, area_of_fire_origin, ignition_cause, ignition_factor_primary, ignition_factor_secondary, heat_source, item_first_ignited, human_factors_associated_with_ignition, structure_type, structure_status, floor_of_fire_origin, fire_spread, no_flame_spread, incident_date
         )
         SELECT 
             incident_number, primary_situation, property_use, area_of_fire_origin, ignition_cause, ignition_factor_primary, ignition_factor_secondary, heat_source, item_first_ignited, human_factors_associated_with_ignition, structure_type, structure_status, floor_of_fire_origin, fire_spread, no_flame_spread, incident_date
-        FROM temp_incident
+        FROM fire_dw.temp_incident
         ON CONFLICT (incident_number) DO UPDATE SET
             primary_situation = EXCLUDED.primary_situation,
             property_use = EXCLUDED.property_use,
@@ -83,6 +83,7 @@ def main(load_date):
         conn.autocommit = False
         cur = conn.cursor()
         try:
+            cur.execute("SET search_path TO fire_dw;")
             create_temp_table(cur)
             batch_size = 1000
             total_rows = len(pdf)
@@ -90,7 +91,7 @@ def main(load_date):
                 batch = pdf.iloc[i:i + batch_size]
                 data = [tuple(x) for x in batch.values]
                 execute_values(cur, """
-                    INSERT INTO temp_incident (
+                    INSERT INTO fire_dw.temp_incident (
                         incident_number, primary_situation, property_use, area_of_fire_origin, ignition_cause, ignition_factor_primary, ignition_factor_secondary, heat_source, item_first_ignited, human_factors_associated_with_ignition, structure_type, structure_status, floor_of_fire_origin, fire_spread, no_flame_spread, incident_date
                     ) VALUES %s
                 """, data)

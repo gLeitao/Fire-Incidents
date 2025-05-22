@@ -44,13 +44,14 @@ def create_temp_table(cur):
     """)
 
 def upsert_from_temp(cur):
+    cur.execute("SET search_path TO fire_dw;")
     cur.execute("""
-        INSERT INTO fact_fire_incident (
+        INSERT INTO fire_dw.fact_fire_incident (
             incident_number, incident_date, alarm_time, arrival_time, dispatch_time, turnout_time, suppression_time, suppression_units, suppression_personnel, ems_units, ems_personnel, other_units, other_personnel, estimated_property_loss, estimated_contents_loss, fire_fatalities, fire_injuries, civilian_fatalities, civilian_injuries, floors_minimum_damage, floors_significant_damage, floors_heavy_damage, floors_extreme_damage, detector_alerted_occupants, detectors_present, automatic_extinguishing_system_present, number_of_sprinkler_heads_operating
         )
         SELECT 
             incident_number, incident_date, alarm_time, arrival_time, dispatch_time, turnout_time, suppression_time, suppression_units, suppression_personnel, ems_units, ems_personnel, other_units, other_personnel, estimated_property_loss, estimated_contents_loss, fire_fatalities, fire_injuries, civilian_fatalities, civilian_injuries, floors_minimum_damage, floors_significant_damage, floors_heavy_damage, floors_extreme_damage, detector_alerted_occupants, detectors_present, automatic_extinguishing_system_present, number_of_sprinkler_heads_operating
-        FROM temp_fire_incident
+        FROM fire_dw.temp_fire_incident
         ON CONFLICT (incident_number) DO UPDATE SET
             incident_date = EXCLUDED.incident_date,
             alarm_time = EXCLUDED.alarm_time,
@@ -113,7 +114,7 @@ def main(load_date):
                 batch = pdf.iloc[i:i + batch_size]
                 data = [tuple(x) for x in batch.values]
                 execute_values(cur, """
-                    INSERT INTO temp_fire_incident (
+                    INSERT INTO fire_dw.temp_fire_incident (
                         incident_number, incident_date, alarm_time, arrival_time, dispatch_time, turnout_time, suppression_time, suppression_units, suppression_personnel, ems_units, ems_personnel, other_units, other_personnel, estimated_property_loss, estimated_contents_loss, fire_fatalities, fire_injuries, civilian_fatalities, civilian_injuries, floors_minimum_damage, floors_significant_damage, floors_heavy_damage, floors_extreme_damage, detector_alerted_occupants, detectors_present, automatic_extinguishing_system_present, number_of_sprinkler_heads_operating
                     ) VALUES %s
                 """, data)

@@ -14,6 +14,7 @@ def create_temp_table(cur):
     """Create temporary table for location data"""
     log_info(logger, "Creating temporary table for location data")
     try:
+        cur.execute("SET search_path TO fire_dw;")
         cur.execute("""
             CREATE TEMP TABLE temp_location (
                 incident_number VARCHAR(255),
@@ -35,6 +36,7 @@ def upsert_from_temp(cur):
     """Upsert data from temporary table to dim_location"""
     log_info(logger, "Starting upsert from temporary table")
     try:
+        cur.execute("SET search_path TO fire_dw;")
         cur.execute("""
             INSERT INTO dim_location (
                 incident_number,
@@ -121,7 +123,7 @@ def main(load_date):
                     
                     # Insert batch into temporary table
                     execute_values(cur, """
-                        INSERT INTO temp_location (
+                        INSERT INTO fire_dw.temp_location (
                             incident_number,
                             address,
                             city,

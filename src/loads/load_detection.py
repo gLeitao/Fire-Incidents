@@ -14,6 +14,7 @@ def create_temp_table(cur):
     """Create temporary table for detection data"""
     log_info(logger, "Creating temporary table for detection data")
     try:
+        cur.execute("SET search_path TO fire_dw;")
         cur.execute("""
             CREATE TEMP TABLE temp_detection (
                 incident_number VARCHAR(255),
@@ -40,8 +41,9 @@ def upsert_from_temp(cur):
     """Upsert data from temporary table to dim_detection"""
     log_info(logger, "Starting upsert from temporary table")
     try:
+        cur.execute("SET search_path TO fire_dw;")
         cur.execute("""
-            INSERT INTO dim_detection (
+            INSERT INTO fire_dw.dim_detection (
                 incident_number,
                 detector_alerted_occupants,
                 detectors_present,
@@ -70,7 +72,7 @@ def upsert_from_temp(cur):
                 automatic_extinguishing_system_failure_reason,
                 number_of_sprinkler_heads_operating,
                 incident_date
-            FROM temp_detection
+            FROM fire_dw.temp_detection
             ON CONFLICT (incident_number) 
             DO UPDATE SET
                 detector_alerted_occupants = EXCLUDED.detector_alerted_occupants,
@@ -141,7 +143,7 @@ def main(load_date):
                     
                     # Insert batch into temporary table
                     execute_values(cur, """
-                        INSERT INTO temp_detection (
+                        INSERT INTO fire_dw.temp_detection (
                             incident_number,
                             detector_alerted_occupants,
                             detectors_present,
