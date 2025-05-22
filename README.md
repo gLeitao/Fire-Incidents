@@ -128,6 +128,7 @@ Here are some example queries you can run on the PostgreSQL data warehouse, each
 ```sql
 SELECT date_trunc('week', incident_date) AS week_start, COUNT(*) AS total_incidents
 FROM fact_fire_incident
+WHERE incident_date = CURRENT_DATE  -- Use the relevant date partition
 GROUP BY week_start
 ORDER BY week_start;
 ```
@@ -173,6 +174,7 @@ SELECT l.neighborhood_district, d.detector_alerted_occupants,
 FROM fact_fire_incident f
 JOIN dim_location l ON f.incident_number = l.incident_number
 JOIN dim_detection d ON f.incident_number = d.incident_number
+WHERE f.incident_date = CURRENT_DATE  -- Use the relevant date partition
 GROUP BY l.neighborhood_district, d.detector_alerted_occupants
 ORDER BY total_victims DESC;
 ```
