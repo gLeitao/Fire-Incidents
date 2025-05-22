@@ -34,16 +34,13 @@ PG_DATABASE = pg_secret['dbname']
 PG_USER = pg_secret['username']
 PG_PASSWORD = pg_secret['password']
 
-# Get S3 bucket from Secrets Manager
+# Get S3 buckets from a single secret
 s3_secret = get_secret('fire-incidents/s3')
-S3_BUCKET = s3_secret['bucket_name']
+LANDING_BUCKET = f"s3a://{s3_secret['landing_bucket']}"
+RAW_BUCKET = f"s3a://{s3_secret['raw_bucket']}"
+REFINED_BUCKET = f"s3a://{s3_secret['refined_bucket']}"
+BUSINESS_BUCKET = f"s3a://{s3_secret['business_bucket']}"
 AWS_REGION = s3_secret.get('region', 'us-east-1')  # Default to us-east-1 if not specified
-
-# Define S3 paths for each data layer
-LANDING_BUCKET = f"s3a://{S3_BUCKET}/landing"
-RAW_BUCKET = f"s3a://{S3_BUCKET}/raw"
-REFINED_BUCKET = f"s3a://{S3_BUCKET}/refined"
-BUSINESS_BUCKET = f"s3a://{S3_BUCKET}/business"
 
 # Helper functions to get full paths with date partitioning
 def get_landing_path(load_date):
