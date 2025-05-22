@@ -88,12 +88,12 @@ sql/
 The data modeling approach for this project is based on the star schema design, with a central fact table and several dimension tables. This approach maximizes performance for analytical queries and BI dashboards.
 
 ### Dimensions
-- **Location Dimension** (`dim_location`): Address, city, zipcode, districts, point, incident_date
-- **Detection Dimension** (`dim_detection`): Detector and suppression system details, incident_date
-- **Incident Dimension** (`dim_incident`): Incident type, description, incident_date
+- **Location Dimension** (`dim_location`): incident_number, address, city, zipcode, supervisor_district, neighborhood_district, point
+- **Detection Dimension** (`dim_detection`): incident_number, detector_alerted_occupants, detectors_present, detector_type, detector_operation, detector_effectiveness, detector_failure_reason, automatic_extinguishing_system_present, automatic_extinguishing_system_type, automatic_extinguishing_system_performance, automatic_extinguishing_system_failure_reason, number_of_sprinkler_heads_operating
+- **Incident Dimension** (`dim_incident`): incident_number, primary_situation, property_use, area_of_fire_origin, ignition_cause, ignition_factor_primary, ignition_factor_secondary, heat_source, item_first_ignited, human_factors_associated_with_ignition, structure_type, structure_status, floor_of_fire_origin, fire_spread, no_flame_spread
 
 ### Fact Table
-- **Fire Incident Fact** (`fact_fire_incident`): Links all dimensions, contains incident date and metrics
+- **Fire Incident Fact** (`fact_fire_incident`): incident_number, incident_date, alarm_time, arrival_time, dispatch_time, turnout_time, suppression_time, suppression_units, suppression_personnel, ems_units, ems_personnel, other_units, other_personnel, estimated_property_loss, estimated_contents_loss, fire_fatalities, fire_injuries, civilian_fatalities, civilian_injuries, floors_minimum_damage, floors_significant_damage, floors_heavy_damage, floors_extreme_damage, detector_alerted_occupants, detectors_present, automatic_extinguishing_system_present, number_of_sprinkler_heads_operating
 
 ## ETL Pipeline Workflow
 
