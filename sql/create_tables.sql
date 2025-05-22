@@ -1,8 +1,21 @@
--- Data Warehouse Star Schema for Fire Incidents (Atualizado)
+CREATE SCHEMA IF NOT EXISTS fire_dw;
 
--- Dimension: Location
-DROP TABLE IF EXISTS dim_location CASCADE;
-CREATE TABLE dim_location (
+DO $$
+BEGIN
+   IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'fire_user') THEN
+      CREATE ROLE fire_user LOGIN PASSWORD 'your_password';
+   END IF;
+END
+$$;
+
+GRANT USAGE ON SCHEMA fire_dw TO fire_user;
+
+ALTER DEFAULT PRIVILEGES IN SCHEMA fire_dw GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO fire_user;
+
+SET search_path TO fire_dw;
+
+DROP TABLE IF EXISTS fire_dw.dim_location CASCADE;
+CREATE TABLE IF NOT EXISTS fire_dw.dim_location (
     incident_number VARCHAR(255) PRIMARY KEY,
     address VARCHAR(255),
     city VARCHAR(255),
@@ -13,9 +26,8 @@ CREATE TABLE dim_location (
     incident_date DATE
 );
 
--- Dimension: Incident
-DROP TABLE IF EXISTS dim_incident CASCADE;
-CREATE TABLE dim_incident (
+DROP TABLE IF EXISTS fire_dw.dim_incident CASCADE;
+CREATE TABLE IF NOT EXISTS fire_dw.dim_incident (
     incident_number VARCHAR(255) PRIMARY KEY,
     primary_situation VARCHAR(255),
     property_use VARCHAR(255),
@@ -34,9 +46,8 @@ CREATE TABLE dim_incident (
     incident_date DATE
 );
 
--- Dimension: Detection
-DROP TABLE IF EXISTS dim_detection CASCADE;
-CREATE TABLE dim_detection (
+DROP TABLE IF EXISTS fire_dw.dim_detection CASCADE;
+CREATE TABLE IF NOT EXISTS fire_dw.dim_detection (
     incident_number VARCHAR(255) PRIMARY KEY,
     detector_alerted_occupants BOOLEAN,
     detectors_present BOOLEAN,
@@ -52,9 +63,8 @@ CREATE TABLE dim_detection (
     incident_date DATE
 );
 
--- Fact Table: Fire Incident
-DROP TABLE IF EXISTS fact_fire_incident CASCADE;
-CREATE TABLE fact_fire_incident (
+DROP TABLE IF EXISTS fire_dw.fact_fire_incident CASCADE;
+CREATE TABLE IF NOT EXISTS fire_dw.fact_fire_incident (
     incident_number VARCHAR(255) PRIMARY KEY,
     incident_date DATE,
     alarm_time TIMESTAMP,
@@ -82,4 +92,6 @@ CREATE TABLE fact_fire_incident (
     detectors_present BOOLEAN,
     automatic_extinguishing_system_present BOOLEAN,
     number_of_sprinkler_heads_operating INTEGER
-); 
+);
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA fire_dw TO fire_user;
