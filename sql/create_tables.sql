@@ -22,8 +22,7 @@ CREATE TABLE IF NOT EXISTS fire_dw.dim_location (
     zipcode VARCHAR(255),
     supervisor_district VARCHAR(255),
     neighborhood_district VARCHAR(255),
-    point VARCHAR(255),
-    incident_date DATE
+    point VARCHAR(255)
 );
 
 DROP TABLE IF EXISTS fire_dw.dim_incident CASCADE;
@@ -42,8 +41,7 @@ CREATE TABLE IF NOT EXISTS fire_dw.dim_incident (
     structure_status VARCHAR(255),
     floor_of_fire_origin VARCHAR(255),
     fire_spread VARCHAR(255),
-    no_flame_spread BOOLEAN,
-    incident_date DATE
+    no_flame_spread BOOLEAN
 );
 
 DROP TABLE IF EXISTS fire_dw.dim_detection CASCADE;
@@ -59,8 +57,7 @@ CREATE TABLE IF NOT EXISTS fire_dw.dim_detection (
     automatic_extinguishing_system_type VARCHAR(255),
     automatic_extinguishing_system_performance VARCHAR(255),
     automatic_extinguishing_system_failure_reason VARCHAR(255),
-    number_of_sprinkler_heads_operating INTEGER,
-    incident_date DATE
+    number_of_sprinkler_heads_operating INTEGER
 );
 
 DROP TABLE IF EXISTS fire_dw.fact_fire_incident CASCADE;
