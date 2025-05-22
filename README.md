@@ -19,9 +19,19 @@ This project deploys an AWS-based data pipeline to manage and analyze fire incid
 
 ## Architecture
 
-The architecture is structured as follows: outside the AWS context, a Python script uploads the source CSV file to S3 (landing layer). The Step Function orchestrates the workflow, triggering Glue jobs for each ETL stage, which process and store data in S3 (raw, refined, business) and finally load it into PostgreSQL.
+The architecture is designed to support a robust, scalable, and automated data pipeline for fire incident analytics. Data ingestion begins with the upload of daily CSV files to an S3 landing zone. The pipeline then processes the data through multiple S3 layers (raw, refined, and business), using AWS Glue jobs for extraction, transformation, and loading (ETL). Orchestration is handled by AWS Step Functions, which coordinate the execution of each ETL stage. The final, curated data is loaded into a PostgreSQL data warehouse, ready for analytical queries and BI reporting.
+
+![Project Architecture](img/Architecture.jpg)
+*Overall AWS-based data pipeline architecture for the Fire Incidents Data Warehouse project.*
+
+The architecture is structured as follows: outside the AWS context, a Python script uploads the source CSV file to S3 (landing layer). The AWS environment includes S3 (raw, refined, business zones), Glue jobs for ETL, Step Functions for orchestration, and PostgreSQL for the data warehouse.
+
+## Workflow
+
+The workflow is orchestrated by AWS Step Functions, which trigger Glue jobs in the correct sequence for each ETL stage. This ensures data is processed, transformed, and loaded efficiently from the landing zone to the data warehouse.
 
 ![Step Function Pipeline](img/step_function.png)
+*Step Function workflow orchestrating the ETL pipeline steps in AWS.*
 
 ## Project Structure
 ```
