@@ -1,0 +1,171 @@
+{
+  "Comment": "Fire Incidents ETL Pipeline - Data Lake Layers",
+  "StartAt": "Raw",
+  "States": {
+    "Raw": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "fire-incidents-raw"
+      },
+      "Next": "Refined"
+    },
+    "Refined": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "fire-incidents-refined",
+        "Arguments": {
+          "--load_date.$": "$.today"
+        }
+      },
+      "Next": "DataQualityCheck"
+    },
+    "DataQualityCheck": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "fire-incidents-data-quality",
+        "Arguments": {
+          "--load_date.$": "$.today"
+        }
+      },
+      "Next": "TableDataProcessing"
+    },
+    "TableDataProcessing": {
+      "Type": "Parallel",
+      "Branches": [
+        {
+          "StartAt": "FireIncidentData",
+          "States": {
+            "FireIncidentData": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::glue:startJobRun.sync",
+              "Parameters": {
+                "JobName": "fire-incidents-fire-incident-data",
+                "Arguments": {
+                  "--load_date.$": "$.today"
+                }
+              },
+              "End": true
+            }
+          }
+        },
+        {
+          "StartAt": "LocationData",
+          "States": {
+            "LocationData": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::glue:startJobRun.sync",
+              "Parameters": {
+                "JobName": "fire-incidents-location-data",
+                "Arguments": {
+                  "--load_date.$": "$.today"
+                }
+              },
+              "End": true
+            }
+          }
+        },
+        {
+          "StartAt": "DetectionData",
+          "States": {
+            "DetectionData": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::glue:startJobRun.sync",
+              "Parameters": {
+                "JobName": "fire-incidents-detection-data",
+                "Arguments": {
+                  "--load_date.$": "$.today"
+                }
+              },
+              "End": true
+            }
+          }
+        },
+        {
+          "StartAt": "IncidentData",
+          "States": {
+            "IncidentData": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::glue:startJobRun.sync",
+              "Parameters": {
+                "JobName": "fire-incidents-incident-data",
+                "Arguments": {
+                  "--load_date.$": "$.today"
+                }
+              },
+              "End": true
+            }
+          }
+        }
+      ],
+      "Next": "DatabaseLoads"
+    },
+    "DatabaseLoads": {
+      "Type": "Parallel",
+      "Branches": [
+        {
+          "StartAt": "LoadLocation",
+          "States": {
+            "LoadLocation": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::glue:startJobRun.sync",
+              "Parameters": {
+                "JobName": "fire-incidents-load-location",
+                "Arguments": {
+                  "--load_date.$": "$.today"
+                }
+              },
+              "End": true
+            }
+          }
+        },
+        {
+          "StartAt": "LoadDetection",
+          "States": {
+            "LoadDetection": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::glue:startJobRun.sync",
+              "Parameters": {
+                "JobName": "fire-incidents-load-detection",
+                "Arguments": {
+                  "--load_date.$": "$.today"
+                }
+              },
+              "End": true
+            }
+          }
+        },
+        {
+          "StartAt": "LoadIncident",
+          "States": {
+            "LoadIncident": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::glue:startJobRun.sync",
+              "Parameters": {
+                "JobName": "fire-incidents-load-incident",
+                "Arguments": {
+                  "--load_date.$": "$.today"
+                }
+              },
+              "End": true
+            }
+          }
+        }
+      ],
+      "Next": "LoadFireIncident"
+    },
+    "LoadFireIncident": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "fire-incidents-load-fire-incident",
+        "Arguments": {
+          "--load_date.$": "$.today"
+        }
+      },
+      "End": true
+    }
+  }
+} 
