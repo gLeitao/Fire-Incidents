@@ -86,31 +86,9 @@ The data modeling approach for this project is based on the star schema design, 
   - Numeric range checks
   - Boolean consistency checks
 
-## Sample Reports & Visualizations
+## Example Analytical Queries & Visualizations
 
-Below are sample visualizations generated from the data warehouse, demonstrating the analytical capabilities of the pipeline:
-
-### 1. Detector Alerted Occupants (Pie Chart)
-![Detector Alerted Pie](img/detector_alerted_pie.png)
-*Shows the proportion of incidents where detectors alerted occupants, providing insight into fire safety effectiveness.*
-
-### 2. Fire Fatalities and Injuries
-![Fatalities and Injuries](img/fatalities_injuries.png)
-*Visualizes the number of fatalities and injuries in fire incidents, helping to identify trends and areas for safety improvement.*
-
-### 3. Fire Causes
-![Fire Causes](img/fire_causes.png)
-*Breaks down the main causes of fires, supporting targeted prevention strategies.*
-
-### 4. Fires by Neighborhood
-![Fires by Neighborhood](img/fires_by_neighborhood.png)
-*Maps the distribution of fire incidents across neighborhoods, useful for resource allocation and risk assessment.*
-
-All these charts are produced using the data warehouse tables and can be reproduced.
-
-## Example Analytical Queries
-
-Here are some example queries you can run on the PostgreSQL data warehouse:
+Here are some example queries you can run on the PostgreSQL data warehouse, each followed by a sample visualization generated from the data:
 
 ### Fire Incidents by Week
 ```sql
@@ -143,6 +121,31 @@ LIMIT 5;
 ```
 ![Fire Causes](img/fire_causes.png)
 *Breaks down the main causes of fires, supporting targeted prevention strategies.*
+
+### Detector Alerted Occupants (Pie Chart)
+```sql
+SELECT detector_alerted_occupants, COUNT(*) AS incident_count
+FROM dim_detection
+GROUP BY detector_alerted_occupants;
+```
+*Shows the proportion of incidents where detectors alerted occupants, providing insight into fire safety effectiveness.*
+
+![Detector Alerted Pie](img/detector_alerted_pie.png)
+
+### Victims by Neighborhood and Detector
+```sql
+SELECT l.neighborhood_district, d.detector_alerted_occupants, 
+       SUM(f.fire_fatalities + f.civilian_fatalities + f.fire_injuries + f.civilian_injuries) AS total_victims
+FROM fact_fire_incident f
+JOIN dim_location l ON f.incident_number = l.incident_number
+JOIN dim_detection d ON f.incident_number = d.incident_number
+GROUP BY l.neighborhood_district, d.detector_alerted_occupants
+ORDER BY total_victims DESC;
+```
+![Victims by Neighborhood and Detector](img/victims_by_neighborhood_and_detector.png)
+*Shows the distribution of fire victims by neighborhood and whether detectors alerted occupants, helping to identify high-risk areas and the impact of detection systems.*
+
+All these charts are produced using the data warehouse tables and can be reproduced.
 
 ## Assumptions and Notes
 - Only the dimensions and fact tables present in the codebase are supported.
