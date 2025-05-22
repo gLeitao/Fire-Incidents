@@ -7,10 +7,34 @@ This project deploys an AWS-based data pipeline to manage and analyze fire incid
 
 ### Pre-deployment instructions:
 - Set up your AWS account.
-- Set up a PostgreSQL instance (RDS or self-managed) and run the schema in `sql/create_tables.sql`.
-- Store PostgreSQL and S3 credentials as secrets in AWS Secrets Manager (referenced in `src/config/config.py`).
+- **Provision the following AWS resources:**
+  - **S3 Buckets:** For landing, raw, refined, and business zones
+    - *IAM permissions required:* `s3:CreateBucket`, `s3:PutObject`, `s3:GetObject`, `s3:ListBucket`, `s3:DeleteObject`
+  - **AWS Glue:**
+    - Glue connections for PostgreSQL (JDBC)
+    - *IAM permissions required:* `glue:*` (for jobs, connections, crawlers), `s3:*` (for reading/writing data), `secretsmanager:GetSecretValue`, `rds-db:connect`, `cloudwatch:PutLogEvents`, `cloudwatch:CreateLogGroup`, `cloudwatch:CreateLogStream`
+    - IAM role for Glue with permissions for S3, Secrets Manager, RDS, CloudWatch
+  - **AWS Step Functions:**
+    - *IAM permissions required:* `states:CreateStateMachine`, `states:StartExecution`, `states:DescribeStateMachine`, `glue:StartJobRun`, `cloudwatch:PutLogEvents`, `cloudwatch:CreateLogGroup`, `cloudwatch:CreateLogStream`
+    - IAM role for Step Functions with permissions to trigger Glue jobs
+  - **AWS Secrets Manager:**
+    - Secrets for PostgreSQL (`fire-incidents/postgres`) containing all required database connection parameters as referenced in the configuration.
+    - Secrets for S3 (`fire-incidents/s3`) containing all required bucket names and the AWS region as referenced in the configuration.
+    - *IAM permissions required:* `secretsmanager:CreateSecret`, `secretsmanager:GetSecretValue`, `secretsmanager:DescribeSecret`, `secretsmanager:ListSecrets`
+  - **Amazon RDS (PostgreSQL):**
+    - Database instance accessible from Glue jobs (correct VPC/subnet/SG setup)
+    - Schema/tables created using `sql/create_tables.sql`
+    - *IAM permissions required:* `rds:CreateDBInstance`, `rds:DescribeDBInstances`, `rds:DeleteDBInstance`, `rds:ModifyDBInstance`, `rds-db:connect`
+  - **Networking:**
+    - VPC, subnets, and security groups to allow Glue <-> RDS connectivity
+    - *IAM permissions required:* `ec2:CreateVpc`, `ec2:CreateSubnet`, `ec2:CreateSecurityGroup`, `ec2:AuthorizeSecurityGroupIngress`, `ec2:CreateVpcEndpoint`, `ec2:Describe*`
 
 ### Deploying the Pipeline
+- Create S3 buckets:
+  - Landing zone bucket (for raw CSV files)
+  - Raw zone bucket (for initial processed data)
+  - Refined zone bucket (for cleaned/standardized data)
+  - Business zone bucket (for dimensional model data)
 - Upload the daily fire incidents CSV to your S3 landing zone bucket (e.g., `s3://your-bucket/landing/incident_date={yyyy-mm-dd}/`).
 - Create AWS Glue jobs for each ETL/business/load script (`src/etl/raw.py`, `src/etl/refined.py`, `src/etl/business/*.py`, `src/loads/*.py`, `src/utils/data_quality.py`).
 - Use the Step Function definition in `src/aws/aws_step_function_definition.json` to orchestrate the workflow.
@@ -19,7 +43,7 @@ This project deploys an AWS-based data pipeline to manage and analyze fire incid
 
 ## Architecture
 
-The architecture is designed to support a robust, scalable, and automated data pipeline for fire incident analytics. Data ingestion begins with the upload of daily CSV files to an S3 landing zone. The pipeline then processes the data through multiple S3 layers (raw, refined, and business), using AWS Glue jobs for extraction, transformation, and loading (ETL). Orchestration is handled by AWS Step Functions, which coordinate the execution of each ETL stage. The final, curated data is loaded into a PostgreSQL data warehouse, ready for analytical queries and BI reporting.
+The architecture is designed to support a robust, scalable, and automated data pipeline for fire incident analytics. Data ingestion begins with the upload of daily CSV files to an S3 landing zone. The pipeline then processes the data through multiple S3 layers (landing, raw, refined, and business), using AWS Glue jobs for extraction, transformation, and loading (ETL). Orchestration is handled by AWS Step Functions, which coordinate the execution of each ETL stage. The final, curated data is loaded into a PostgreSQL data warehouse, ready for analytical queries and BI reporting.
 
 ![Project Architecture](img/Architecture.jpg)
 *Overall AWS-based data pipeline architecture for the Fire Incidents Data Warehouse project.*
