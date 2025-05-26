@@ -166,7 +166,7 @@ CREATE TABLE IF NOT EXISTS fire_dw.dim_timeofday (
     time_description VARCHAR(20)
 );
 
--- Populate dim_timeofday with all seconds in a day
+-- Populate dim_timeofday with all seconds in a day 
 INSERT INTO fire_dw.dim_timeofday (
     time_number, time, hour, minute, second, am_pm, hour_24, hour_12, minute_of_day, second_of_day, time_description
 )
