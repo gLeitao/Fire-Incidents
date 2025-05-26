@@ -63,8 +63,8 @@ src/
 ├── aws/                    # AWS Step Functions definition
 ├── config/                 # Configuration files (uses AWS Secrets Manager)
 ├── etl/                    # ETL scripts
-│   ├── raw.py             # Raw data processing (deduplication, initial cleaning)
-│   ├── refined.py         # Refined data processing (standardization, date parsing)
+│   ├── raw.py             # Raw data processing (initial cleaning)
+│   ├── refined.py         # Refined data processing (standardization, date parsing, deduplication)
 │   └── business/          # Business layer scripts (dimension/fact transformations)
 │       ├── detection_data.py  # Detection dimension business layer
 │       ├── incident_data.py   # Incident dimension business layer
@@ -75,9 +75,17 @@ src/
 │   ├── load_incident.py   # Incident dimension loading
 │   ├── load_location.py   # Location dimension loading
 │   └── load_fire_incident.py # Fact table loading
-└── utils/                 # Utility functions
-    ├── data_quality.py    # Data quality checks
-    └── logging_utils.py   # Logging setup
+├── utils/                 # Utility functions
+│   └── logging_utils.py   # Logging setup
+└── test/                  # Test code
+    ├── unit_test/
+    │   └── test_refined_py.py   # Unit test for deduplication logic in refined.py
+    └── data_test/
+        └── data_quality.py      # Data quality checks and tests
+
+github/
+└── workflows/
+    └── python-app.yml    # GitHub Actions workflow for CI
 
 sql/
 └── create_tables.sql      # Database schema definition
@@ -91,6 +99,8 @@ The data modeling approach for this project is based on the star schema design, 
 - **Location Dimension** (`dim_location`): incident_number, address, city, zipcode, supervisor_district, neighborhood_district, point
 - **Detection Dimension** (`dim_detection`): incident_number, detector_alerted_occupants, detectors_present, detector_type, detector_operation, detector_effectiveness, detector_failure_reason, automatic_extinguishing_system_present, automatic_extinguishing_system_type, automatic_extinguishing_system_performance, automatic_extinguishing_system_failure_reason, number_of_sprinkler_heads_operating
 - **Incident Dimension** (`dim_incident`): incident_number, primary_situation, property_use, area_of_fire_origin, ignition_cause, ignition_factor_primary, ignition_factor_secondary, heat_source, item_first_ignited, human_factors_associated_with_ignition, structure_type, structure_status, floor_of_fire_origin, fire_spread, no_flame_spread
+- **Time Dimension** (`dim_time`): date_number (yyyymmdd, PK), date, year, month, day, day_of_week, quarter, week, day_name, month_name, full_date_description, is_weekend, is_holiday, day_of_year, is_leap_year, month_start, month_end, quarter_start, quarter_end, year_start, year_end
+- **Time of Day Dimension** (`dim_timeofday`): time_number (hhmmss, PK), time, hour, minute, second, am_pm, hour_24, hour_12, minute_of_day, second_of_day, time_description
 
 ### Fact Table
 - **Fire Incident Fact** (`fact_fire_incident`): incident_number, incident_date, alarm_time, arrival_time, dispatch_time, turnout_time, suppression_time, suppression_units, suppression_personnel, ems_units, ems_personnel, other_units, other_personnel, estimated_property_loss, estimated_contents_loss, fire_fatalities, fire_injuries, civilian_fatalities, civilian_injuries, floors_minimum_damage, floors_significant_damage, floors_heavy_damage, floors_extreme_damage, detector_alerted_occupants, detectors_present, automatic_extinguishing_system_present, number_of_sprinkler_heads_operating
@@ -99,9 +109,10 @@ The data modeling approach for this project is based on the star schema design, 
 
 1. **Raw Layer** (`raw.py`):
    - Ingests CSV from S3 landing zone
-   - Deduplicates and writes to Parquet in the raw zone
 2. **Refined Layer** (`refined.py`):
    - Cleans and standardizes data, trims fields, ensures date formats
+   - Deduplicates records (first on all columns, then on `incident_number`)
+   - Deduplication logic is modularized in `deduplicate_records`
    - Writes to Parquet in the refined zone
 3. **Business Layer** (`etl/business/*.py`):
    - Each business script selects and transforms the relevant fields for its dimension/fact
@@ -110,15 +121,23 @@ The data modeling approach for this project is based on the star schema design, 
    - Each loader reads from the business zone and loads data into the corresponding PostgreSQL table
    - Uses upsert logic, batching, and partitioning by date
 
-### Monitoring
-- The pipeline logs each step and status to CloudWatch and PostgreSQL.
-- Data quality checks are implemented in `src/utils/data_quality.py` and include:
+## Data Quality & Testing
+Data quality checks are implemented in `src/utils/data_quality.py` and include:
   - Null value checks
   - Data type validation
   - Unique key checks
   - Date format validation
   - Numeric range checks
   - Boolean consistency checks
+
+### Unit Tests
+- Unit tests for deduplication logic are in `src/test/unit_test/test_refined_py.py`.
+- To run the test locally:
+  ```
+  pytest src/test/unit_test/test_refined_py.py
+  ```
+- The test uses PySpark and pandas to verify deduplication on both all columns and `incident_number`.
+- **Continuous Integration:** All unit tests are run automatically on every push or pull request to the `main` branch using GitHub Actions. The workflow is defined in `.github/workflows/python-app.yml` and ensures your code is always tested before being merged or deployed.
 
 ## Example Analytical Queries & Visualizations
 
@@ -188,3 +207,11 @@ All these charts are produced using the data warehouse tables and can be reprodu
 - All ETL and loader scripts are modular, with logging and error handling.
 - Data is partitioned by date for efficient incremental loads.
 - Credentials and configuration are externalized for security and flexibility.
+
+## Continuous Integration
+This project uses GitHub Actions to run unit tests automatically:
+- Workflow file: `.github/workflows/python-app.yml`
+- On every push or pull request to `main`, the workflow:
+  - Sets up Python 3.9
+  - Installs dependencies (`pytest`, `pandas`, `pyspark`)
+  - Runs `pytest src/test/unit_test/test_refined_py.py`
