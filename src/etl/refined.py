@@ -8,6 +8,19 @@ from awsglue.utils import getResolvedOptions
 # Setup logger
 logger = setup_logger('refined')
 
+def deduplicate_records(df, logger=None):
+    """Deduplicate records: first on all columns, then on incident_number if present."""
+    df_dedup_all = df.dropDuplicates()
+    log_info(logger, f"Records after deduplication on all columns: {df_dedup_all.count()}")
+    
+    if 'incident_number' not in df_dedup_all.columns:
+        log_info(logger, "Column 'incident_number' not found. Skipping deduplication on incident_number.")
+        return df_dedup_all
+ 
+    df_dedup_incident = df_dedup_all.dropDuplicates(['incident_number'])
+    log_info(logger, f"Records after deduplication on incident_number: {df_dedup_incident.count()}")
+    return df_dedup_incident
+
 def main(load_date):
     """Main function to process refined data"""
     log_info(logger, f"Starting refined data processing for date: {load_date}")
@@ -33,14 +46,16 @@ def main(load_date):
                 trim(col(c)).alias(c) for c in df.columns
             ])
             
+            # Deduplicate records using the new function
+            df_dedup_incident = deduplicate_records(df_cleaned, logger)
+            
             # Convert date columns
-            df_transformed = df_cleaned.withColumn(
+            df_transformed = df_dedup_incident.withColumn(
                 "incident_date",
                 to_date(col("incident_date"))
             )
             
             log_info(logger, f"Transformed {df_transformed.count()} records")
-            
        
             # Write to refined layer
             REFINED_PATH = get_refined_path(load_date)
