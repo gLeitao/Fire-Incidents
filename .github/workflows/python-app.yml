@@ -21,4 +21,4 @@ jobs:
         pip install pytest pandas pyspark
     - name: Run unit tests
       run: |
-        pytest src/test/unit_test/test_refined_py.py 
+        PYTHONPATH=src pytest src/test/unit_test/test_refined_py.py 
