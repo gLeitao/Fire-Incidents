@@ -214,4 +214,4 @@ All these charts are produced using the data warehouse tables and can be reprodu
 - Only the dimensions and fact tables present in the codebase are supported.
 - All ETL and loader scripts are modular, with logging and error handling.
 - Data is partitioned by date for efficient incremental loads.
-- Credentials and configuration are externalized for security and flexibility.
+- Credentials and configuration are externalized for security and flexibility. 
