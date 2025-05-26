@@ -99,7 +99,7 @@ The data modeling approach for this project is based on the star schema design, 
 - **Location Dimension** (`dim_location`): incident_number, address, city, zipcode, supervisor_district, neighborhood_district, point
 - **Detection Dimension** (`dim_detection`): incident_number, detector_alerted_occupants, detectors_present, detector_type, detector_operation, detector_effectiveness, detector_failure_reason, automatic_extinguishing_system_present, automatic_extinguishing_system_type, automatic_extinguishing_system_performance, automatic_extinguishing_system_failure_reason, number_of_sprinkler_heads_operating
 - **Incident Dimension** (`dim_incident`): incident_number, primary_situation, property_use, area_of_fire_origin, ignition_cause, ignition_factor_primary, ignition_factor_secondary, heat_source, item_first_ignited, human_factors_associated_with_ignition, structure_type, structure_status, floor_of_fire_origin, fire_spread, no_flame_spread
-- **Time Dimension** (`dim_time`): date_number (yyyymmdd, PK), date, year, month, day, day_of_week, quarter, week, day_name, month_name, full_date_description, is_weekend, is_holiday, day_of_year, is_leap_year, month_start, month_end, quarter_start, quarter_end, year_start, year_end
+- **Time Dimension** (`dim_time`): date_number (yyyymmdd, PK), date, year, month, day, day_of_week, quarter, week, day_name, month_name, full_date_description, is_weekend, day_of_year, is_leap_year, month_start, month_end, quarter_start, quarter_end, year_start, year_end
 - **Time of Day Dimension** (`dim_timeofday`): time_number (hhmmss, PK), time, hour, minute, second, am_pm, hour_24, hour_12, minute_of_day, second_of_day, time_description
 
 ### Fact Table
