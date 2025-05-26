@@ -105,6 +105,29 @@ The data modeling approach for this project is based on the star schema design, 
 ### Fact Table
 - **Fire Incident Fact** (`fact_fire_incident`): incident_number, incident_date, alarm_time, arrival_time, dispatch_time, turnout_time, suppression_time, suppression_units, suppression_personnel, ems_units, ems_personnel, other_units, other_personnel, estimated_property_loss, estimated_contents_loss, fire_fatalities, fire_injuries, civilian_fatalities, civilian_injuries, floors_minimum_damage, floors_significant_damage, floors_heavy_damage, floors_extreme_damage, detector_alerted_occupants, detectors_present, automatic_extinguishing_system_present, number_of_sprinkler_heads_operating
 
+## Using Time Dimensions
+
+### Converting Dates to Time Dimension Keys
+To join with the `dim_time` table, you can convert any date to its corresponding `date_number` (PK) using:
+
+```sql
+-- Example: Join fact table with dim_time
+SELECT f.*, t.day_name, t.month_name, t.is_weekend
+FROM fact_fire_incident f
+JOIN dim_time t ON CAST(TO_CHAR(f.incident_date, 'YYYYMMDD') AS INTEGER) = t.date_number;
+```
+
+### Converting Times to Time of Day Dimension Keys
+To join with the `dim_timeofday` table, you can convert any time to its corresponding `time_number` (PK) using:
+
+```sql
+-- Example: Join fact table with dim_timeofday
+SELECT f.*, td.hour, td.minute, td.am_pm
+FROM fact_fire_incident f
+JOIN dim_timeofday td ON CAST(TO_CHAR(f.alarm_time::time, 'HH24MISS') AS INTEGER) = td.time_number;
+```
+
+
 ## ETL Pipeline Workflow
 
 1. **Raw Layer** (`raw.py`):
