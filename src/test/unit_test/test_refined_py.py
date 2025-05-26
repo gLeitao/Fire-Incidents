@@ -1,5 +1,10 @@
 import pytest
 import pandas as pd
+from unittest.mock import patch, MagicMock
+
+# Patch boto3.client before importing code that uses it
+patch('boto3.client', return_value=MagicMock()).start()
+
 from pyspark.sql import SparkSession
 from etl.refined import deduplicate_records
 
@@ -18,7 +23,7 @@ def test_deduplicate_records():
     spark, sdf = make_spark_df(data)
     # Call deduplicate_records
     result_df = deduplicate_records(sdf)
-    # Collect result 
+    # Collect result
     result = result_df.toPandas()
     # Should have 3 unique incident_number rows
     assert result['incident_number'].nunique() == 3
