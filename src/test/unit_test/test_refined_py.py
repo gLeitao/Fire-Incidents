@@ -2,8 +2,36 @@ import pytest
 import pandas as pd
 from unittest.mock import patch, MagicMock
 
-# Patch boto3.client before importing code that uses it
-patch('boto3.client', return_value=MagicMock()).start()
+# Mock AWS credentials and secrets before importing any other modules
+mock_secrets = {
+    'fire-incidents/postgres': {
+        'host': 'localhost',
+        'port': '5432',
+        'dbname': 'test_db',
+        'username': 'test_user',
+        'password': 'test_pass'
+    },
+    'fire-incidents/s3': {
+        'landing_bucket': 'test-landing',
+        'raw_bucket': 'test-raw',
+        'refined_bucket': 'test-refined',
+        'business_bucket': 'test-business',
+        'region': 'us-east-1'
+    }
+}
+
+def mock_get_secret(secret_name, region_name='us-east-1'):
+    return mock_secrets[secret_name]
+
+# Apply all necessary patches before importing the modules
+patches = [
+    patch('boto3.client', return_value=MagicMock()),
+    patch('boto3.session.Session', return_value=MagicMock()),
+    patch('config.config.get_secret', side_effect=mock_get_secret)
+]
+
+for p in patches:
+    p.start()
 
 from pyspark.sql import SparkSession
 from etl.refined import deduplicate_records
@@ -29,4 +57,11 @@ def test_deduplicate_records():
     assert result['incident_number'].nunique() == 3
     # Should have only one row for A1, one for A2, one for A3
     assert set(result['incident_number']) == {"A1", "A2", "A3"}
-    spark.stop() 
+    spark.stop()
+
+# Clean up patches after tests
+@pytest.fixture(autouse=True)
+def cleanup_patches():
+    yield
+    for p in patches:
+        p.stop() 
