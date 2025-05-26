@@ -139,6 +139,14 @@ Data quality checks are implemented in `src/utils/data_quality.py` and include:
 - The test uses PySpark and pandas to verify deduplication on both all columns and `incident_number`.
 - **Continuous Integration:** All unit tests are run automatically on every push or pull request to the `main` branch using GitHub Actions. The workflow is defined in `.github/workflows/python-app.yml` and ensures your code is always tested before being merged or deployed.
 
+## Continuous Integration
+This project uses GitHub Actions to run unit tests automatically:
+- Workflow file: `.github/workflows/python-app.yml`
+- On every push or pull request to `main`, the workflow:
+  - Sets up Python 3.9
+  - Installs dependencies (`pytest`, `pandas`, `pyspark`)
+  - Runs `pytest src/test/unit_test/test_refined_py.py`
+
 ## Example Analytical Queries & Visualizations
 
 Here are some example queries you can run on the PostgreSQL data warehouse, each followed by a sample visualization generated from the data:
@@ -207,11 +215,3 @@ All these charts are produced using the data warehouse tables and can be reprodu
 - All ETL and loader scripts are modular, with logging and error handling.
 - Data is partitioned by date for efficient incremental loads.
 - Credentials and configuration are externalized for security and flexibility.
-
-## Continuous Integration
-This project uses GitHub Actions to run unit tests automatically:
-- Workflow file: `.github/workflows/python-app.yml`
-- On every push or pull request to `main`, the workflow:
-  - Sets up Python 3.9
-  - Installs dependencies (`pytest`, `pandas`, `pyspark`)
-  - Runs `pytest src/test/unit_test/test_refined_py.py`
