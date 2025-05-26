@@ -33,10 +33,6 @@ def main(load_date):
             
             log_info(logger, f"Successfully read {df.count()} records from landing zone")
             
-            # Basic data cleaning
-            df_cleaned = df.dropDuplicates()
-            log_info(logger, f"Removed duplicates, remaining records: {df_cleaned.count()}")
-            
             # Write to raw layer as Parquet
             RAW_PATH = get_raw_path(load_date)
             log_info(logger, f"Writing data to: {RAW_PATH}")
