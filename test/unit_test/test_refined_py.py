@@ -18,7 +18,7 @@ def test_deduplicate_records():
     spark, sdf = make_spark_df(data)
     # Call deduplicate_records
     result_df = deduplicate_records(sdf)
-    # Collect result
+    # Collect result 
     result = result_df.toPandas()
     # Should have 3 unique incident_number rows
     assert result['incident_number'].nunique() == 3
