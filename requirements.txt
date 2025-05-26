@@ -5,3 +5,4 @@ pandas
 requests
 boto3
 s3fs 
+pytest
