@@ -2,6 +2,16 @@ import pytest
 import pandas as pd
 from unittest.mock import patch, MagicMock
 import json
+import sys
+
+# Mock AWS Glue before any imports
+class MockGlueUtils:
+    @staticmethod
+    def getResolvedOptions(args, options):
+        return {opt: f"mock_{opt}" for opt in options}
+
+sys.modules['awsglue'] = MagicMock()
+sys.modules['awsglue.utils'] = MockGlueUtils()
 
 # Mock AWS credentials and secrets before importing any other modules
 mock_secrets = {
