@@ -89,8 +89,8 @@ def test_deduplicate_records():
         {"incident_number": "A3", "incident_date": "2023-01-03", "value": "baz"},
     ]
     spark, sdf = make_spark_df(data)
-    # Call deduplicate_records
-    result_df = deduplicate_records(sdf)
+    # Call deduplicate_records with the mock logger
+    result_df = deduplicate_records(sdf, logger=mock_logger)
     # Collect result
     result = result_df.toPandas()
     # Should have 3 unique incident_number rows
