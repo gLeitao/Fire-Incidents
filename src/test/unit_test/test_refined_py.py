@@ -3,6 +3,17 @@ import pandas as pd
 from unittest.mock import patch, MagicMock
 import json
 import sys
+import logging
+
+# Mock logging before any imports
+class MockFileHandler(logging.FileHandler):
+    def __init__(self, filename, mode='a', encoding=None, delay=False):
+        # Override to do nothing
+        pass
+
+    def emit(self, record):
+        # Override to do nothing
+        pass
 
 # Mock AWS Glue before any imports
 class MockGlueUtils:
@@ -44,7 +55,8 @@ mock_session.client.return_value = mock_client
 
 # Apply all necessary patches before importing the modules
 patches = [
-    patch('boto3.session.Session', return_value=mock_session)
+    patch('boto3.session.Session', return_value=mock_session),
+    patch('logging.FileHandler', MockFileHandler)
 ]
 
 for p in patches:
