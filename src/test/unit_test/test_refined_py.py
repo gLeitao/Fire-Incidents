@@ -1,7 +1,7 @@
 import pytest
 import pandas as pd
 from pyspark.sql import SparkSession
-from src.etl.refined import deduplicate_records
+from etl.refined import deduplicate_records
 
 def make_spark_df(data):
     spark = SparkSession.builder.master("local[1]").appName("pytest").getOrCreate()
