@@ -179,7 +179,7 @@ def run_quality_checks(load_date):
             spark.stop()
             log_info(logger, "Spark session stopped")
 
-if __name__ == "__main__":
+if __name__ == "__main__": 
     try:
         args = getResolvedOptions(sys.argv, ['load_date'])
         load_date = args['load_date']
