@@ -91,4 +91,101 @@ CREATE TABLE IF NOT EXISTS fire_dw.fact_fire_incident (
     number_of_sprinkler_heads_operating INTEGER
 );
 
+DROP TABLE IF EXISTS fire_dw.dim_time CASCADE;
+CREATE TABLE IF NOT EXISTS fire_dw.dim_time (
+    date_number INTEGER PRIMARY KEY,
+    date DATE,
+    year INTEGER,
+    month INTEGER,
+    day INTEGER,
+    day_of_week INTEGER,
+    quarter INTEGER,
+    week INTEGER,
+    day_name VARCHAR(20),
+    month_name VARCHAR(20),
+    full_date_description VARCHAR(50),
+    is_weekend BOOLEAN,
+    is_holiday BOOLEAN DEFAULT FALSE,
+    day_of_year INTEGER,
+    is_leap_year BOOLEAN,
+    month_start BOOLEAN,
+    month_end BOOLEAN,
+    quarter_start BOOLEAN,
+    quarter_end BOOLEAN,
+    year_start BOOLEAN,
+    year_end BOOLEAN
+);
+
+INSERT INTO fire_dw.dim_time (
+    date_number, date, year, month, day, day_of_week, quarter, week, day_name, month_name, full_date_description, is_weekend, is_holiday, day_of_year, is_leap_year, month_start, month_end, quarter_start, quarter_end, year_start, year_end
+)
+WITH RECURSIVE dates AS (
+    SELECT DATE '1960-01-01' AS date
+    UNION ALL
+    SELECT date + INTERVAL '1 day'
+    FROM dates
+    WHERE date + INTERVAL '1 day' <= DATE '2160-12-31'
+)
+SELECT 
+    CAST(TO_CHAR(date, 'YYYYMMDD') AS INTEGER) AS date_number,
+    date,
+    EXTRACT(YEAR FROM date) AS year,
+    EXTRACT(MONTH FROM date) AS month,
+    EXTRACT(DAY FROM date) AS day,
+    EXTRACT(DOW FROM date) AS day_of_week,
+    EXTRACT(QUARTER FROM date) AS quarter,
+    EXTRACT(WEEK FROM date) AS week,
+    TO_CHAR(date, 'Day') AS day_name,
+    TO_CHAR(date, 'Month') AS month_name,
+    TO_CHAR(date, 'FMDay, FMMonth DD, YYYY') AS full_date_description,
+    (EXTRACT(DOW FROM date) IN (0,6)) AS is_weekend,
+    FALSE AS is_holiday,
+    EXTRACT(DOY FROM date) AS day_of_year,
+    EXTRACT(ISODOW FROM date) = 366 AS is_leap_year,
+    (EXTRACT(DAY FROM date) = 1) AS month_start,
+    (date = (date_trunc('month', date) + INTERVAL '1 month - 1 day')::date) AS month_end,
+    (date = date_trunc('quarter', date)) AS quarter_start,
+    (date = (date_trunc('quarter', date) + INTERVAL '3 month - 1 day')::date) AS quarter_end,
+    (EXTRACT(DOY FROM date) = 1) AS year_start,
+    (date = (date_trunc('year', date) + INTERVAL '1 year - 1 day')::date) AS year_end
+FROM dates;
+
+-- Create dim_timeofday table
+DROP TABLE IF EXISTS fire_dw.dim_timeofday CASCADE;
+CREATE TABLE IF NOT EXISTS fire_dw.dim_timeofday (
+    time_number INTEGER PRIMARY KEY,
+    time TIME,
+    hour INTEGER,
+    minute INTEGER,
+    second INTEGER,
+    am_pm VARCHAR(2),
+    hour_24 INTEGER,
+    hour_12 INTEGER,
+    minute_of_day INTEGER,
+    second_of_day INTEGER,
+    time_description VARCHAR(20)
+);
+
+-- Populate dim_timeofday with all seconds in a day
+INSERT INTO fire_dw.dim_timeofday (
+    time_number, time, hour, minute, second, am_pm, hour_24, hour_12, minute_of_day, second_of_day, time_description
+)
+SELECT
+    CAST(TO_CHAR(t, 'HH24MISS') AS INTEGER) AS time_number,
+    t AS time,
+    EXTRACT(HOUR FROM t) AS hour,
+    EXTRACT(MINUTE FROM t) AS minute,
+    EXTRACT(SECOND FROM t) AS second,
+    TO_CHAR(t, 'AM') AS am_pm,
+    EXTRACT(HOUR FROM t) AS hour_24,
+    CAST(TO_CHAR(t, 'HH12') AS INTEGER) AS hour_12,
+    (EXTRACT(HOUR FROM t) * 60 + EXTRACT(MINUTE FROM t)) AS minute_of_day,
+    (EXTRACT(HOUR FROM t) * 3600 + EXTRACT(MINUTE FROM t) * 60 + EXTRACT(SECOND FROM t)) AS second_of_day,
+    TO_CHAR(t, 'HH12:MI:SS AM') AS time_description
+FROM generate_series(
+    TIME '00:00:00',
+    TIME '23:59:59',
+    INTERVAL '1 second'
+) AS t;
+
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA fire_dw TO fire_user;
