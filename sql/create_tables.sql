@@ -139,7 +139,6 @@ SELECT
     TO_CHAR(date, 'Month') AS month_name,
     TO_CHAR(date, 'FMDay, FMMonth DD, YYYY') AS full_date_description,
     (EXTRACT(DOW FROM date) IN (0,6)) AS is_weekend,
-    FALSE AS is_holiday,
     EXTRACT(DOY FROM date) AS day_of_year,
     EXTRACT(ISODOW FROM date) = 366 AS is_leap_year,
     (EXTRACT(DAY FROM date) = 1) AS month_start,
