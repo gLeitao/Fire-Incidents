@@ -1,33 +1,40 @@
 import pytest
 import pandas as pd
 from unittest.mock import patch, MagicMock
+import json
 
 # Mock AWS credentials and secrets before importing any other modules
 mock_secrets = {
-    'fire-incidents/postgres': {
+    'fire-incidents/postgres': json.dumps({
         'host': 'localhost',
         'port': '5432',
         'dbname': 'test_db',
         'username': 'test_user',
         'password': 'test_pass'
-    },
-    'fire-incidents/s3': {
+    }),
+    'fire-incidents/s3': json.dumps({
         'landing_bucket': 'test-landing',
         'raw_bucket': 'test-raw',
         'refined_bucket': 'test-refined',
         'business_bucket': 'test-business',
         'region': 'us-east-1'
-    }
+    })
 }
 
-def mock_get_secret(secret_name, region_name='us-east-1'):
-    return mock_secrets[secret_name]
+def mock_get_secret_value(SecretId):
+    return {'SecretString': mock_secrets[SecretId]}
+
+# Create mock boto3 client
+mock_client = MagicMock()
+mock_client.get_secret_value = MagicMock(side_effect=mock_get_secret_value)
+
+# Create mock session
+mock_session = MagicMock()
+mock_session.client.return_value = mock_client
 
 # Apply all necessary patches before importing the modules
 patches = [
-    patch('boto3.client', return_value=MagicMock()),
-    patch('boto3.session.Session', return_value=MagicMock()),
-    patch('config.config.get_secret', side_effect=mock_get_secret)
+    patch('boto3.session.Session', return_value=mock_session)
 ]
 
 for p in patches:
