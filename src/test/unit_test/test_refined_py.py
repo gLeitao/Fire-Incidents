@@ -5,6 +5,13 @@ import json
 import sys
 import logging
 
+# Create a mock logger
+mock_logger = MagicMock()
+mock_logger.info = MagicMock()
+mock_logger.error = MagicMock()
+mock_logger.warning = MagicMock()
+mock_logger.debug = MagicMock()
+
 # Mock logging before any imports
 class MockFileHandler(logging.FileHandler):
     def __init__(self, filename, mode='a', encoding=None, delay=False):
@@ -53,10 +60,14 @@ mock_client.get_secret_value = MagicMock(side_effect=mock_get_secret_value)
 mock_session = MagicMock()
 mock_session.client.return_value = mock_client
 
+def mock_setup_logger(name):
+    return mock_logger
+
 # Apply all necessary patches before importing the modules
 patches = [
     patch('boto3.session.Session', return_value=mock_session),
-    patch('logging.FileHandler', MockFileHandler)
+    patch('logging.FileHandler', MockFileHandler),
+    patch('utils.logging_utils.setup_logger', side_effect=mock_setup_logger)
 ]
 
 for p in patches:
